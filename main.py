@@ -9,11 +9,16 @@ app = FastAPI(title="Porsche 918 Spyder Chatbot")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
+    allow_origins=[
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+        "https://porsche-918-spyder-3d-flame.vercel.app"
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
 
 class ChatRequest(BaseModel):
     question: str
