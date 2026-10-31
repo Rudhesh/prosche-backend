@@ -5,40 +5,44 @@ from embedding_engine import create_embeddings
 from vector_database import store_chunks
 
 
-# Wikipedia source
-URL = "https://en.wikipedia.org/wiki/Porsche_918_Spyder"
+# Porsche information source
+SOURCE_URL = "https://en.wikipedia.org/wiki/Porsche_918_Spyder"
 
 
-def ingest_website(url):
+def ingest_website():
 
-    print("\n1. Downloading website...")
+    print("1. Reading Porsche website...")
 
-    website_text = read_website(url)
+    text = read_website(SOURCE_URL)
 
-    print("Downloaded characters:", len(website_text))
+    if not text:
+        print("Could not read website.")
+        return
 
-    print("\n2. Splitting text into chunks...")
+    print("2. Splitting text into chunks...")
 
-    chunks = split_into_chunks(
-        website_text,
-        chunk_size=500,
-        overlap=50
-    )
+    chunks = split_into_chunks(text)
+
+    if not chunks:
+        print("No text chunks created.")
+        return
 
     print("Total chunks:", len(chunks))
 
-    print("\n3. Creating embeddings...")
+    print("3. Creating embeddings...")
 
     embeddings = create_embeddings(chunks)
 
-    print("Embedding shape:", embeddings.shape)
+    print("4. Storing information in Qdrant Cloud...")
 
-    print("\n4. Storing in ChromaDB...")
+    store_chunks(
+        chunks,
+        embeddings,
+        SOURCE_URL
+    )
 
-    store_chunks(chunks, embeddings, url)
-
-    print("\nWebsite ingestion completed!")
+    print("5. Ingestion completed successfully!")
 
 
 if __name__ == "__main__":
-    ingest_website(URL)
+    ingest_website()

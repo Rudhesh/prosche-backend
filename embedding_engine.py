@@ -1,23 +1,49 @@
 
-from sentence_transformers import SentenceTransformer
+import os
+import numpy as np
 
+from dotenv import load_dotenv
+from google import genai
+from google.genai import types
 
-# Load the embedding model
-model = SentenceTransformer("all-MiniLM-L6-v2")
+load_dotenv()
+
+# Connect to Gemini API
+client = genai.Client(
+    api_key=os.getenv("GEMINI_API_KEY")
+)
+
+MODEL_NAME = "gemini-embedding-001"
+
+# Use 768 dimensions to reduce vector storage size
+VECTOR_SIZE = 768
 
 
 def create_embeddings(text_chunks):
     """
-    Convert text chunks into numerical vectors.
+    Convert multiple text chunks into numerical vectors using Gemini.
     """
 
-    embeddings = model.encode(
-        text_chunks,
-        convert_to_numpy=True,
-        normalize_embeddings=True
+    result = client.models.embed_content(
+        model=MODEL_NAME,
+        contents=text_chunks,
+        config=types.EmbedContentConfig(
+            task_type="RETRIEVAL_DOCUMENT",
+            output_dimensionality=VECTOR_SIZE
+        )
     )
 
-    return embeddings
+    embeddings = []
+
+    for item in result.embeddings:
+        vector = np.array(item.values, dtype=np.float32)
+
+        # Normalize the vector
+        vector = vector / np.linalg.norm(vector)
+
+        embeddings.append(vector)
+
+    return np.array(embeddings)
 
 
 def create_question_embedding(question):
@@ -25,13 +51,24 @@ def create_question_embedding(question):
     Convert a user's question into a numerical vector.
     """
 
-    embedding = model.encode(
-        question,
-        convert_to_numpy=True,
-        normalize_embeddings=True
+    result = client.models.embed_content(
+        model=MODEL_NAME,
+        contents=question,
+        config=types.EmbedContentConfig(
+            task_type="RETRIEVAL_QUERY",
+            output_dimensionality=VECTOR_SIZE
+        )
     )
 
-    return embedding
+    vector = np.array(
+        result.embeddings[0].values,
+        dtype=np.float32
+    )
+
+    # Normalize the vector
+    vector = vector / np.linalg.norm(vector)
+
+    return vector
 
 
 if __name__ == "__main__":
@@ -47,4 +84,4 @@ if __name__ == "__main__":
     print("Vector dimensions:", vectors.shape)
 
     print("\nFirst vector:")
-    print(vectors[0])
+    print(vectors[0][:10])

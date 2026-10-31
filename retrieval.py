@@ -3,35 +3,34 @@ from embedding_engine import create_question_embedding
 from vector_database import search_chunks
 
 
-def retrieve_information(question):
+def retrieve_context(question, results_count=3):
+    """
+    Find the most relevant Porsche information in Qdrant.
+    """
 
-    print("\nUser question:", question)
-
-    # Convert question into an embedding
+    # Step 1: Convert the question into a numerical vector
     question_embedding = create_question_embedding(question)
 
-    # Search ChromaDB
+    # Step 2: Search Qdrant for similar vectors
     results = search_chunks(
         question_embedding,
-        results_count=3
+        results_count=results_count
     )
 
-    print("\nRelevant information:\n")
-
+    # Step 3: Extract the matching documents
     documents = results["documents"][0]
-    distances = results["distances"][0]
 
-    for i, document in enumerate(documents):
+    # Step 4: Combine the documents into one context
+    context = "\n\n".join(documents)
 
-        print(f"\n--- Result {i + 1} ---")
-
-        print("Distance:", distances[i])
-
-        print("Content:", document[:500])
+    return context
 
 
 if __name__ == "__main__":
 
-    question = "What is the top speed of the Porsche 918 Spyder?"
+    question = "What engine does the Porsche 918 Spyder have?"
 
-    retrieve_information(question)
+    context = retrieve_context(question)
+
+    print("\nRetrieved information:")
+    print(context)
