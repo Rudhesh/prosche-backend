@@ -62,7 +62,7 @@ def generate_answer(question):
 
     # Step 5: Generate answer
     response = client.models.generate_content(
-        model="gemini-3.8-flash",
+        model="gemini-3.5-flash-lite",
         contents=prompt
     )
 
